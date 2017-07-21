@@ -1,11 +1,16 @@
 
 package pcmfft;
 
+import java.util.Scanner;
 import java.io.*;
 
 public class PcmFFT {
 
 	public static void main(String[] args) {
+		
+		
+		double[][][] Uin = new double[4][2][65536];
+		double[][][] Vin = new double[4][2][65536];
 		
 		for (int tt=1;tt<=3;tt++)
 		{
@@ -104,26 +109,90 @@ public class PcmFFT {
 					
 					for (int i=0; i <soundRI1[0].length;i++)
 					{
-						frequencyout1.write(String.valueOf(soundRI1[0][i])+'\n');
-						//out.write(String.valueOf(soundRI[0][i])+' '+String.valueOf(soundRI[1][i])+'\n');
+						//frequencyout1.write(String.valueOf(soundRI1[0][i])+'\n');
+						frequencyout1.write(String.valueOf(soundRI1[0][i])+' '+String.valueOf(soundRI2[1][i])+'\n');
+						
+						Uin[tt][0][i] = soundRI1[0][i];
+						Uin[tt][1][i] = soundRI1[1][i];
+						
 					}
 					frequencyout1.close();
         
 					for (int i=0; i <soundRI2[0].length;i++)
 					{
-						frequencyout2.write(String.valueOf(soundRI2[0][i])+'\n');
-						//out.write(String.valueOf(soundRI[0][i])+' '+String.valueOf(soundRI[1][i])+'\n');
+						//frequencyout2.write(String.valueOf(soundRI2[0][i])+'\n');
+						frequencyout2.write(String.valueOf(soundRI2[0][i])+' '+String.valueOf(soundRI2[1][i])+'\n');
+						
+
+						Vin[tt][0][i] = soundRI2[0][i];
+						Vin[tt][1][i] = soundRI2[1][i];
 					}
 					frequencyout2.close();
-        
+					
+					
+					double [][] sys=Util.divide(soundRI2,soundRI1);
+					FileWriter  sysout = new FileWriter(new File("sys_res"+String.valueOf(tt)+".txt"));
+					for (int i=0;i<sys[0].length;i++)
+					{
+						sysout.write(String.valueOf(sys[0][i])+' '+String.valueOf(sys[1][i])+'\n');
+					}
+					sysout.close();
+					
+					
 			}
 			catch (IOException e) {
 				System.out.print("ayayayayayayayayaayayay"+String.valueOf(tt));
 			}
 			finally {
-				System.out.println("finish");
+				System.out.println("fft-finish");
 			}
+			
 		}
-	}
+		for (int u=1;u<=3;u++)
+			for (int v=1;v<=3;v++)
+				try {
+						
+						Scanner uin = new Scanner(new FileInputStream("frequency"+String.valueOf(u)+".txt"));
+						Scanner vin = new Scanner(new FileInputStream("frequency_recorded"+String.valueOf(v)+".txt"));
+						
+						int Length = 65536;
+						
+						double[][] freU = new double[2][Length];
+						
+						for (int i=0; i < Length; i++)
+						{
+							freU[0][i] = uin.nextDouble();
+							freU[1][i] = uin.nextDouble();
+						}
+						
+						double[][] freV = new double[2][Length];
+						
+						for (int i=0; i < Length; i++)
+						{
+							freV[0][i] = vin.nextDouble();
+							freV[1][i] = vin.nextDouble();
+						}
+						
+						//double [][] sys=Util.divide(freV,freU);
+						
+						double [][] sys=Util.divide(Uin[v],Vin[u]);
+						
+						
+						FileWriter  sysout = new FileWriter(new File("sys_res"+String.valueOf(u)+String.valueOf(v)+".txt"));
+						for (int i=0;i<sys[0].length;i++)
+						{
+							sysout.write(String.valueOf(sys[0][i])+' '+String.valueOf(sys[1][i])+'\n');
+						}
+						sysout.close();
+						
+						
+				}
+				catch (IOException e) {
+					System.out.print("ayayayayayayayayaayayay"+String.valueOf(u)+" "+String.valueOf(v));
+				}
+				finally {
+					System.out.println("sys-finish");
+				}
+		}
 
 }
