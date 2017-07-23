@@ -6,7 +6,7 @@
 #include <algorithm>
 
 char str[]="sys_res00.txt";
-const int Length = 65536;
+const int Length = 262144;
 
 double Sys[5][5][2][Length];
 double Sys_res[2][Length];
