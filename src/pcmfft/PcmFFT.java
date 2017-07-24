@@ -5,7 +5,77 @@ import java.util.Scanner;
 import java.io.*;
 
 public class PcmFFT {
+	
+	static int frequency = 44100;
+	static int soundN = frequency * 5;// 5s
+	static int Length = Util.closestLargerPower2( frequency * 5 );		//5s
 
+	
+	
+	
+	public static short[] changePcmtoSound(String Path) {
+		short [] sound = new short [soundN];
+		try {
+				File filepoint = new File(Path);
+				DataInputStream inData = new DataInputStream(new FileInputStream(filepoint));
+				for (int i=0;i<soundN;i++)
+				{
+					try {
+							sound[i] = inData.readShort();
+							
+					} catch (IOException e)
+					{
+						System.out.println("No more data");
+						break;
+					}
+				}
+				inData.close();
+		}	catch (IOException e)
+		{
+			System.out.println("where is the file: "+Path);
+		}
+		
+		
+		
+		return sound;
+	}
+	
+	public static void outSound(String Path, short [] sound)
+	{
+		try {
+			FileWriter  soundout = new FileWriter(new File(Path));
+			for (int i=0;i<sound.length;i++)
+			{
+				soundout.write(String.valueOf(sound[i])+'\n');
+			}
+		
+			soundout.close();
+		} catch (IOException e)
+		{
+			System.out.println("can't output to file: "+Path);
+		}
+	}
+	
+	public static void outFrequency(String Path, double [][] frequency)
+	{
+		try {
+			
+			FileWriter  frequencyout = new FileWriter(new File(Path));
+			
+			for (int i=0; i <frequency[0].length;i++)
+			{
+				//frequencyout1.write(String.valueOf(soundRI1[0][i])+'\n');
+				frequencyout.write(String.valueOf(frequency[0][i])+' '+String.valueOf(frequency[1][i])+'\n');
+				
+			}
+			
+			frequencyout.close();
+		} catch (IOException e)
+		{
+			System.out.println("can't output to file: "+Path);
+		}
+	}
+	
 	public static void main(String[] args) {
 		
 		 
@@ -15,162 +85,41 @@ public class PcmFFT {
 		for (int tt=1;tt<=3;tt++)
 		{
 		
-			int frequency = 44100;
-			try {
-					File file1 = new File("reverseme"+String.valueOf(tt)+".pcm");
-					File file2 = new File("reverseme_recorded"+String.valueOf(tt)+".pcm");
+			
+			
+				
+					short[] buffer1 = changePcmtoSound("reverseme"+String.valueOf(tt)+".pcm");
+					short[] buffer2 = changePcmtoSound("reverseme_recorded"+String.valueOf(tt)+".pcm");
 		
-					DataInputStream inputStream_org = new DataInputStream(new FileInputStream(file1));
-					//int soundN = frequency;
-					int soundN = frequency * 5;
+					
+					outSound("sound"+String.valueOf(tt)+".txt",buffer1);
+					outSound("sound_recorded"+String.valueOf(tt)+".txt",buffer2);
 					
 					
-					int powerN = Util.closestLargerPower2(soundN);
-					
-					System.out.print("Length: ");
-					System.out.println(powerN);
-					
-					boolean P1=false,P2=false;
-					short[] buffer1 = new short[soundN];
-					
-					for (int i = 0; i<buffer1.length;i++){
-						//buffer1[i] = inputStream_org.readShort();
-						try {
-								if (P1) buffer1[i] = inputStream_org.readShort();
-								else {
-										int label=0;
-										short tmp=inputStream_org.readShort();
-										for (;tmp==0;)
-										{
-											tmp=inputStream_org.readShort();
-											label++;
-										}
-										P1=true;
-										buffer1[i]=tmp;
-										System.out.print(label);
-										System.out.print(' ');
-									}
-							}
-							catch (IOException e)
-							{
-								System.out.println("buffer1 in finish");
-								break;
-							}
-					}
-					inputStream_org.close();
-		
-					inputStream_org = new DataInputStream(new FileInputStream(file2));
-					
-					//soundN = frequency;
-					
-					soundN = frequency * 5;
-					
-					powerN = Util.closestLargerPower2(soundN);
-					short[] buffer2 = new short[soundN];
-					for (int i = 0; i<buffer2.length;i++){
-						try {
-								//buffer2[i] = inputStream_org.readShort();
-								if (P2) buffer2[i] = inputStream_org.readShort();
-								else {
-										int label =0;
-										short tmp=inputStream_org.readShort();
-										for (;tmp==0;)
-										{
-											tmp=inputStream_org.readShort();
-											label++;
-										}
-										P2=true;
-										buffer2[i]=tmp;
-										System.out.print(label);
-										System.out.print(' ');
-									}
-							}
-							catch (IOException e)
-							{
-									System.out.println("buffer2 in finish");
-									break;
-							}
-						}
-					inputStream_org.close();
-		
-
-					FileWriter  soundout1 = new FileWriter(new File("sound"+String.valueOf(tt)+".txt"));
-					FileWriter  soundout2 = new FileWriter(new File("sound_recorded"+String.valueOf(tt)+".txt"));
-					for (int i=0;i<buffer1.length;i++)
-					{
-						soundout1.write(String.valueOf(buffer1[i])+'\n');
-					}
-		
-					for (int i=0;i<buffer2.length;i++)
-					{
-						soundout2.write(String.valueOf(buffer2[i])+'\n');
-					}
-        
-					soundout1.close();
-					soundout2.close();
-		
-		
-		
 					double[][] soundRI1 = new double[][]{
-						Util.soundToDoubleArray(buffer1),new double[powerN]
+						Util.soundToDoubleArray(buffer1),new double[Length]
 					};
 					Util.fft(soundRI1);
         
 					double[][] soundRI2 = new double[][]{
-						Util.soundToDoubleArray(buffer2),new double[powerN]
+						Util.soundToDoubleArray(buffer2),new double[Length]
 					};
 					Util.fft(soundRI2);
         
-
-            
-					FileWriter  frequencyout1 = new FileWriter(new File("frequency"+String.valueOf(tt)+".txt"));
-					FileWriter  frequencyout2 = new FileWriter(new File("frequency_recorded"+String.valueOf(tt)+".txt"));
-            
-            
-					//System.out.print(soundRI[0][0]);
-					//System.out.print(' ');
-					//System.out.print(soundRI[1][0]);
 					
-					for (int i=0; i <soundRI1[0].length;i++)
-					{
-						//frequencyout1.write(String.valueOf(soundRI1[0][i])+'\n');
-						frequencyout1.write(String.valueOf(soundRI1[0][i])+' '+String.valueOf(soundRI2[1][i])+'\n');
-						
-						Uin[tt][0][i] = soundRI1[0][i];
-						Uin[tt][1][i] = soundRI1[1][i];
-						
-					}
-					frequencyout1.close();
-        
-					for (int i=0; i <soundRI2[0].length;i++)
-					{
-						//frequencyout2.write(String.valueOf(soundRI2[0][i])+'\n');
-						frequencyout2.write(String.valueOf(soundRI2[0][i])+' '+String.valueOf(soundRI2[1][i])+'\n');
-						
-
-						Vin[tt][0][i] = soundRI2[0][i];
-						Vin[tt][1][i] = soundRI2[1][i];
-					}
-					frequencyout2.close();
+					outFrequency("frequency"+String.valueOf(tt)+".txt",soundRI1);
+					outFrequency("frequency"+String.valueOf(tt)+".txt",soundRI2);
+            		
+					Uin[tt] = soundRI1;
+					Vin[tt] = soundRI2;
 					
 					
 					double [][] sys=Util.divide(soundRI2,soundRI1);
-					FileWriter  sysout = new FileWriter(new File("sys_res"+String.valueOf(tt)+".txt"));
-					for (int i=0;i<sys[0].length;i++)
-					{
-						sysout.write(String.valueOf(sys[0][i])+' '+String.valueOf(sys[1][i])+'\n');
-					}
-					sysout.close();
+					
+					outFrequency("sys_res"+String.valueOf(tt)+".txt",sys);
 					
 					
-			}
-			catch (IOException e) {
-				System.out.print("ayayayayayayayayaayayay"+String.valueOf(tt));
-			}
-			finally {
-				System.out.println("fft-finish");
-			}
-			
+					 System.out.println("fft-finish");
 		}
 		for (int u=1;u<=3;u++)
 			for (int v=1;v<=3;v++)
